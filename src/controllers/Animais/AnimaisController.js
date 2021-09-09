@@ -12,17 +12,26 @@ module.exports = {
 
       const sqlSelect = {
         text: ` 
-          SELECT 
-            F.ID_FAZENDA AS ID, 
-            F.NOME, 
-            (F.CIDADE || '/' || F.ESTADO) AS LOCALIZACAO,
-            (SELECT COUNT(A.ID_ANIMAL)
-            FROM ${schema}.ANIMAL A
-            WHERE A.ID_FAZENDA = F.ID_FAZENDA) AS NUM_ANIMAIS
-          FROM ${schema}.FAZENDA F 
-          GROUP BY F.ID_FAZENDA
+          SELECT
+            A.ID_ANIMAL AS ID,
+            A.NOME, 
+            CASE
+              WHEN B.COD_RFID IS NOT NULL THEN B.COD_RFID
+              WHEN B.COD_VISUAL IS NOT NULL THEN B.COD_VISUAL
+              ELSE '-' END BRINCO,
+            A.PESO AS PESO_ORIGINAL,  
+            CASE
+              WHEN HP.PESO IS NOT NULL THEN CAST(HP.PESO AS VARCHAR)
+              ELSE '-'
+            END PESO_ATUAL,  
+            R.NOME AS RACA,
+            A.SEXO
+          FROM ${schema}.ANIMAIS A
+            INNER JOIN ${schema}.RACAS R ON A.ID_RACA = R.ID_RACA
+            LEFT JOIN ${schema}.BRINCOS B ON A.ID_ANIMAL = B.ID_ANIMAL
+            LEFT JOIN ${schema}.HISTORICO_PESAGENS HP ON A.ID_ANIMAL = HP.ID_ANIMAL
         `
-      }
+      } 
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
@@ -93,8 +102,9 @@ module.exports = {
       const dados = req.body;
 
       const sqlInsert = {
-        text: `INSERT INTO ${schema}.FAZENDA (NOME, CEP, CIDADE, ESTADO) VALUES ($1, $2, $3, $4)`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO] 
+        text: `INSERT INTO ${schema}.ANIMAIS (ID_FAZENDA, ID_PIQUETE, ID_RACA, NOME, SEXO, DATA_NASCIMENTO, NOME_PAI, NOME_MAE, PESO, PELAGEM) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        values: [dados.ID_FAZENDA, dados.ID_PIQUETE, dados.ID_RACA, dados.NOME, dados.SEXO, dados.DATA_NASCIMENTO, dados.NOME_PAI, dados.NOME_MAE, dados.PESO, dados.PELAGEM] 
       }
 
       pool.connect((err, client, done) => {
@@ -105,9 +115,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Cadastrar Fazenda",
+              title: "Cadastrar Animal",
               cadastrado: true,
-              message: "Fazenda cadastrada com sucesso!",
+              message: "Animal cadastrada com sucesso!",
             });
           }
         }); 

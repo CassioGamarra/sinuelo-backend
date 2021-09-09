@@ -12,15 +12,18 @@ module.exports = {
 
       const sqlSelect = {
         text: ` 
-          SELECT 
-            F.ID_FAZENDA AS ID, 
-            F.NOME, 
-            (F.CIDADE || '/' || F.ESTADO) AS LOCALIZACAO,
-            (SELECT COUNT(A.ID_ANIMAL)
-            FROM ${schema}.ANIMAL A
-            WHERE A.ID_FAZENDA = F.ID_FAZENDA) AS NUM_ANIMAIS
-          FROM ${schema}.FAZENDA F 
-          GROUP BY F.ID_FAZENDA
+          SELECT
+            P.ID_PIQUETE AS ID,
+            P.ID_FAZENDA,
+            F.NOME AS FAZENDA, 
+            P.NOME AS PIQUETE, 
+            P.CAPACIDADE,
+            (SELECT COUNT (A.ID_ANIMAL)
+            FROM ${schema}.ANIMAIS A
+            WHERE A.ID_PIQUETE = P.ID_PIQUETE) AS NUM_ANIMAIS
+          FROM ${schema}.PIQUETES P
+            INNER JOIN ${schema}.FAZENDAS F ON P.ID_FAZENDA = F.ID_FAZENDA
+          GROUP BY P.ID_PIQUETE, F.NOME
         `
       }
 
@@ -83,7 +86,7 @@ module.exports = {
       });
     }
   },
-
+  
   //POST
   async cadastrar(req, res) {
     const isAdmin = req.isAdmin;
@@ -93,9 +96,9 @@ module.exports = {
       const dados = req.body;
 
       const sqlInsert = {
-        text: `INSERT INTO ${schema}.FAZENDA (NOME, CEP, CIDADE, ESTADO) VALUES ($1, $2, $3, $4)`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO] 
-      }
+        text: `INSERT INTO ${schema}.PIQUETES (ID_FAZENDA, NOME, CAPACIDADE) VALUES ($1, $2, $3)`,
+        values: [dados.ID_FAZENDA, dados.NOME, dados.CAPACIDADE] 
+      } 
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
@@ -105,9 +108,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Cadastrar Fazenda",
+              title: "Cadastrar Piquete",
               cadastrado: true,
-              message: "Fazenda cadastrada com sucesso!",
+              message: "Piquete cadastrado com sucesso!",
             });
           }
         }); 
