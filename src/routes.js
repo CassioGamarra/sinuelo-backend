@@ -8,9 +8,11 @@ const FazendasController = require('./controllers/Fazendas/FazendasController');
 const PiquetesController = require('./controllers/Piquetes/PiquetesController');
 const RacasController = require('./controllers/Racas/RacasController');
 const AnimaisController = require('./controllers/Animais/AnimaisController');
+const FuncionariosController = require('./controllers/Funcionarios/FuncionariosController');
 
 //Rotas 
 routes.post('/admin/login', LoginController.administrador); //Login do administrador (no site)
+routes.post('/login', LoginController.funcionario); //Login do funcionário (aplicativo)
 
 //Fazendas
 routes.get('/fazendas', verifyJWT, FazendasController.buscar);
@@ -37,6 +39,11 @@ routes.get('/animais/:id', verifyJWT, AnimaisController.buscarPorId);
 routes.post('/animais' , verifyJWT, AnimaisController.cadastrar);
 routes.put('/animais/:id' , verifyJWT, AnimaisController.atualizar);
 routes.delete('/animais/:id', verifyJWT, AnimaisController.excluir);
-
+//Funcionários
+routes.get('/funcionarios', verifyJWT, FuncionariosController.buscar);
+routes.get('/funcionarios/:id', verifyJWT, FuncionariosController.buscarPorId);
+routes.post('/funcionarios' , verifyJWT, FuncionariosController.cadastrar);
+routes.put('/funcionarios/:id' , verifyJWT, FuncionariosController.atualizar);
+routes.delete('/funcionarios/:id', verifyJWT, FuncionariosController.excluir);
 
 module.exports = routes;

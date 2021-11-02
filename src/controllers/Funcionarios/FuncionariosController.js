@@ -1,4 +1,5 @@
 const pool = require('../../database/connection'); 
+const bcrypt = require('bcryptjs');
 require('dotenv/config');
 
 module.exports = {
@@ -13,14 +14,15 @@ module.exports = {
       const sqlSelect = {
         text: ` 
           SELECT 
-            F.ID_FAZENDA AS ID, 
+            F.ID_FUNCIONARIO AS ID, 
             F.NOME, 
-            (F.CIDADE || '/' || F.ESTADO) AS LOCALIZACAO,
-            (SELECT COUNT(A.ID_ANIMAL)
-            FROM ${schema}.ANIMAL A
-            WHERE A.ID_FAZENDA = F.ID_FAZENDA) AS NUM_ANIMAIS
-          FROM ${schema}.FAZENDA F 
-          GROUP BY F.ID_FAZENDA
+            F.USUARIO,
+            CASE 
+              WHEN F.ATIVO = TRUE THEN 'Sim'
+              ELSE 'Não'
+            END AS ATIVO
+          FROM ${schema}.FUNCIONARIOS F 
+          GROUP BY F.ID_FUNCIONARIO
         `
       }
 
@@ -49,20 +51,20 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema;
-      const idFazenda = req.params.id; 
+      const idFuncionario = req.params.id; 
 
       const sqlSelect = {
         text: ` 
           SELECT 
-            ID_FAZENDA AS ID,
+            ID_FUNCIONARIO AS ID,
             NOME,
-            CEP,
-            CIDADE,
-            ESTADO
-          FROM ${schema}.FAZENDA
-          WHERE ID_FAZENDA = $1
+            USUARIO,
+            EMAIL,
+            ATIVO
+          FROM ${schema}.FUNCIONARIOS
+          WHERE ID_FUNCIONARIO = $1
         `,
-        values:[idFazenda]
+        values:[idFuncionario]
       }
 
       pool.connect((err, client, done) => {
@@ -92,9 +94,13 @@ module.exports = {
       const schema = req.schema;
       const dados = req.body;
 
+      const salt = bcrypt.genSaltSync(10);
+      const password = bcrypt.hashSync(dados.SENHA, salt);
+
+
       const sqlInsert = {
-        text: `INSERT INTO ${schema}.FAZENDA (NOME, CEP, CIDADE, ESTADO) VALUES ($1, $2, $3, $4)`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO] 
+        text: `INSERT INTO ${schema}.FUNCIONARIOS (NOME, USUARIO, SENHA, EMAIL, ATIVO, NIVEL) VALUES ($1, $2, $3, $4, $5, $6)`,
+        values: [dados.NOME, dados.USUARIO, password, dados.EMAIL, dados.ATIVO, 1] 
       }
 
       pool.connect((err, client, done) => {
@@ -105,9 +111,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Cadastrar Fazenda",
+              title: "Cadastrar Funcionário",
               cadastrado: true,
-              message: "Fazenda cadastrada com sucesso!",
+              message: "Funcionário cadastrado com sucesso!",
             });
           }
         }); 

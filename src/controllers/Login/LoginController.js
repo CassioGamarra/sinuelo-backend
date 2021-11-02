@@ -40,7 +40,7 @@ module.exports = {
           } else {
             const comparaSenha = bcrypt.compareSync(senha, result.rows[0].senha); 
             if(comparaSenha) {
-              const token = generateToken({ idUsuario: result.rows[0].id_usuario, isAdmin: true, cliente: result.rows[0].nome_schema }); 
+              const token = generateToken({ idUsuario: result.rows[0].id_usuario, isAdmin: true, isActive: true, cliente: result.rows[0].nome_schema }); 
               res.json({
                 statusCode: 200, 
                 token: token
@@ -63,17 +63,14 @@ module.exports = {
     }
   },
 
-  async funcionario(req, res) {
-    const idUsuario = req.idUsuario;
-    const idPessoa = req.idPessoa;
-    const schema = req.schema;
-    const { senha } = req.body; 
+  async funcionario(req, res) {  
+    const { usuario, senha, tokenFazenda } = req.body;  
 
     if (senha && senha.length < 200) {
       //Cria o SQL para consulta
       const sqlSelect = {
-        text: `SELECT SENHA FROM ${schema}.USUARIOS WHERE ID_USUARIO = $1`,
-        values: [idUsuario]
+        text: `SELECT NOME_SCHEMA FROM SINUELO.CLIENTES WHERE CAMINHO = $1`,
+        values: [tokenFazenda]
       }
 
       pool.connect((err, client, done) => {
@@ -85,26 +82,49 @@ module.exports = {
             res.json({
               statusCode: 404,
               title: "Erro",
-              message: "Login não encontrado!"
+              message: "Verifique os dados e tente novamente!"
             })
           } else {
-            const comparaSenha = bcrypt.compareSync(senha, result.rows[0].senha); 
-            if(comparaSenha) {
-              const token = generateToken({ idUsuario: idUsuario, idPessoa: idPessoa, cliente: schema, isActive: true }); 
-              res.json({
-                statusCode: 200, 
-                token: token
-              });
-            } else {
-              res.json({
-                statusCode: 403,
-                title: "Erro",
-                message: "Senha incorreta!"
-              });
+            const schema = result.rows[0].nome_schema;
+
+            const sqlSelect = {
+              text: `SELECT ID_FUNCIONARIO, USUARIO, SENHA FROM ${schema}.FUNCIONARIOS WHERE USUARIO = $1 AND ATIVO = TRUE`,
+              values: [usuario]
             }
+      
+            pool.connect((err, client, done) => {
+              if (err) throw err;
+              client.query(sqlSelect, (err, result) => {
+                if (err) throw err;
+                done();
+                if (result.rows.length === 0) {
+                  res.json({
+                    statusCode: 404,
+                    title: "Erro",
+                    message: "Login não encontrado!"
+                  })
+                } else {
+                  const comparaSenha = bcrypt.compareSync(senha, result.rows[0].senha); 
+                  if(comparaSenha) {
+                    const token = generateToken({ idUsuario: result.rows[0].id_funcionario, cliente: schema, isActive: true }); 
+                    res.json({
+                      statusCode: 200,
+                      usuario: result.rows[0].usuario, 
+                      token: token
+                    });
+                  } else {
+                    res.json({
+                      statusCode: 403,
+                      title: "Erro",
+                      message: "Senha incorreta!"
+                    });
+                  }
+                }
+              });
+            });
           }
         });
-      });
+      }); 
     } else {
       res.status(400).json({
         statusCode: 400,

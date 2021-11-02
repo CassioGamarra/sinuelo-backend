@@ -19,6 +19,7 @@ module.exports = (req, res, next) => {
     req.idUsuario = decoded.idUsuario; 
     req.schema = decoded.cliente; 
     req.isAdmin = decoded.isAdmin; 
+    req.isActive = decoded.isActive;
     
     return next();
   });
