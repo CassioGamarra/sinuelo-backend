@@ -21,8 +21,7 @@ module.exports = {
               WHEN F.ATIVO = TRUE THEN 'Sim'
               ELSE 'Não'
             END AS ATIVO
-          FROM ${schema}.FUNCIONARIOS F 
-          GROUP BY F.ID_FUNCIONARIO
+          FROM ${schema}.FUNCIONARIOS F  
         `
       }
 

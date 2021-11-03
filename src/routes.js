@@ -9,6 +9,8 @@ const PiquetesController = require('./controllers/Piquetes/PiquetesController');
 const RacasController = require('./controllers/Racas/RacasController');
 const AnimaisController = require('./controllers/Animais/AnimaisController');
 const FuncionariosController = require('./controllers/Funcionarios/FuncionariosController');
+const BrincosController = require('./controllers/Brincos/BrincosController');
+const AlertasController = require('./controllers/Alertas/AlertasController');
 
 //Rotas 
 routes.post('/admin/login', LoginController.administrador); //Login do administrador (no site)
@@ -45,5 +47,17 @@ routes.get('/funcionarios/:id', verifyJWT, FuncionariosController.buscarPorId);
 routes.post('/funcionarios' , verifyJWT, FuncionariosController.cadastrar);
 routes.put('/funcionarios/:id' , verifyJWT, FuncionariosController.atualizar);
 routes.delete('/funcionarios/:id', verifyJWT, FuncionariosController.excluir);
+//Brincos
+routes.get('/brincos', verifyJWT, BrincosController.buscar);
+routes.get('/brincos/:id', verifyJWT, BrincosController.buscarPorId);
+routes.post('/brincos' , verifyJWT, BrincosController.cadastrar);
+routes.put('/brincos/:id' , verifyJWT, BrincosController.atualizar);
+routes.delete('/brincos/:id', verifyJWT, BrincosController.excluir);
+//Alertas
+routes.get('/alertas', verifyJWT, AlertasController.buscar);
+routes.get('/alertas/:id', verifyJWT, AlertasController.buscarPorId);
+routes.post('/alertas' , verifyJWT, AlertasController.cadastrar);
+routes.put('/alertas/:id' , verifyJWT, AlertasController.atualizar);
+routes.delete('/alertas/:id', verifyJWT, AlertasController.excluir);
 
 module.exports = routes;

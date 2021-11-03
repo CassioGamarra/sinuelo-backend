@@ -13,14 +13,15 @@ module.exports = {
       const sqlSelect = {
         text: ` 
           SELECT 
-            F.ID_FAZENDA AS ID, 
-            F.NOME, 
-            (F.CIDADE || '/' || F.ESTADO) AS LOCALIZACAO,
-            (SELECT COUNT(A.ID_ANIMAL)
-            FROM ${schema}.ANIMAL A
-            WHERE A.ID_FAZENDA = F.ID_FAZENDA) AS NUM_ANIMAIS
-          FROM ${schema}.FAZENDA F 
-          GROUP BY F.ID_FAZENDA
+            B.ID_BRINCO AS ID, 
+            CASE
+              WHEN B.COD_RFID IS NOT NULL THEN B.COD_RFID
+              WHEN B.COD_VISUAL IS NOT NULL THEN B.COD_VISUAL
+              ELSE '-' END CODIGO,
+            (SELECT A.NOME
+              FROM ${schema}.ANIMAIS A
+            WHERE A.ID_ANIMAL = B.ID_ANIMAL) AS ANIMAL 
+          FROM ${schema}.BRINCOS B  
         `
       }
 
@@ -92,9 +93,13 @@ module.exports = {
       const schema = req.schema;
       const dados = req.body;
 
+      const idAnimal = dados.ID_ANIMAL !== '' ? dados.ID_ANIMAL : null;
+      const codRFID = dados.COD_RFID !== '' ? dados.COD_RFID : null; 
+      const codVisual = dados.COD_VISUAL !== '' ? dados.COD_VISUAL : null; 
+
       const sqlInsert = {
-        text: `INSERT INTO ${schema}.FAZENDA (NOME, CEP, CIDADE, ESTADO) VALUES ($1, $2, $3, $4)`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO] 
+        text: `INSERT INTO ${schema}.BRINCOS (ID_ANIMAL, COD_RFID, COD_VISUAL) VALUES ($1, $2, $3)`,
+        values: [idAnimal, codRFID, codVisual] 
       }
 
       pool.connect((err, client, done) => {
@@ -105,9 +110,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Cadastrar Fazenda",
+              title: "Cadastrar Brinco",
               cadastrado: true,
-              message: "Fazenda cadastrada com sucesso!",
+              message: "Brinco cadastrado com sucesso!",
             });
           }
         }); 
