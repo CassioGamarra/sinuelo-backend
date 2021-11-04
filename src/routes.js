@@ -11,6 +11,11 @@ const AnimaisController = require('./controllers/Animais/AnimaisController');
 const FuncionariosController = require('./controllers/Funcionarios/FuncionariosController');
 const BrincosController = require('./controllers/Brincos/BrincosController');
 const AlertasController = require('./controllers/Alertas/AlertasController');
+const VacinasController = require('./controllers/Vacinas/VacinasController');
+const DoencasController = require('./controllers/Doencas/DoencasController');
+const MedicamentosController = require('./controllers/Medicamentos/MedicamentosController');
+//Sincronização
+const SincronizarController = require('./controllers/Sincronizar/SincronizarController'); 
 
 //Rotas 
 routes.post('/admin/login', LoginController.administrador); //Login do administrador (no site)
@@ -59,5 +64,26 @@ routes.get('/alertas/:id', verifyJWT, AlertasController.buscarPorId);
 routes.post('/alertas' , verifyJWT, AlertasController.cadastrar);
 routes.put('/alertas/:id' , verifyJWT, AlertasController.atualizar);
 routes.delete('/alertas/:id', verifyJWT, AlertasController.excluir);
+//Vacinas
+routes.get('/vacinas', verifyJWT, VacinasController.buscar);
+routes.get('/vacinas/:id', verifyJWT, VacinasController.buscarPorId);
+routes.post('/vacinas' , verifyJWT, VacinasController.cadastrar);
+routes.put('/vacinas/:id' , verifyJWT, VacinasController.atualizar);
+routes.delete('/vacinas/:id', verifyJWT, VacinasController.excluir);
+//Doenças
+routes.get('/doencas', verifyJWT, DoencasController.buscar);
+routes.get('/doencas/:id', verifyJWT, DoencasController.buscarPorId);
+routes.post('/doencas' , verifyJWT, DoencasController.cadastrar);
+routes.put('/doencas/:id' , verifyJWT, DoencasController.atualizar);
+routes.delete('/doencas/:id', verifyJWT, DoencasController.excluir);
+//Medicamentos
+routes.get('/medicamentos', verifyJWT, MedicamentosController.buscar);
+routes.get('/medicamentos/:id', verifyJWT, MedicamentosController.buscarPorId);
+routes.post('/medicamentos' , verifyJWT, MedicamentosController.cadastrar);
+routes.put('/medicamentos/:id' , verifyJWT, MedicamentosController.atualizar);
+routes.delete('/medicamentos/:id', verifyJWT, MedicamentosController.excluir);
+//Sincronizar
+routes.get('/sincronizar', verifyJWT, SincronizarController.buscar);
+routes.post('/sincronizar', verifyJWT, SincronizarController.cadastrar);
 
 module.exports = routes;

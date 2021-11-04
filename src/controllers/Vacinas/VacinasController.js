@@ -13,14 +13,12 @@ module.exports = {
       const sqlSelect = {
         text: ` 
           SELECT 
-            F.ID_FAZENDA AS ID, 
-            F.NOME, 
-            (F.CIDADE || '/' || F.ESTADO) AS LOCALIZACAO,
-            (SELECT COUNT(A.ID_ANIMAL)
-            FROM ${schema}.ANIMAL A
-            WHERE A.ID_FAZENDA = F.ID_FAZENDA) AS NUM_ANIMAIS
-          FROM ${schema}.FAZENDA F 
-          GROUP BY F.ID_FAZENDA
+            V.ID_VACINA AS ID,
+            V.DESCRICAO,
+            V.IND_OBRIGATORIO,
+            V.MODO_USO,
+            SUBSTRING(V.DETALHES, 0, 80) AS DETALHES 
+          FROM ${schema}.VACINAS V
         `
       }
 
@@ -93,8 +91,8 @@ module.exports = {
       const dados = req.body;
 
       const sqlInsert = {
-        text: `INSERT INTO ${schema}.FAZENDA (NOME, CEP, CIDADE, ESTADO) VALUES ($1, $2, $3, $4)`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO] 
+        text: `INSERT INTO ${schema}.VACINAS (DESCRICAO, IND_OBRIGATORIO, MODO_USO, DETALHES) VALUES ($1, $2, $3, $4)`,
+        values: [dados.DESCRICAO, dados.IND_OBRIGATORIO, dados.MODO_USO, dados.DETALHES] 
       }
 
       pool.connect((err, client, done) => {
@@ -105,9 +103,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Cadastrar Fazenda",
+              title: "Cadastrar Vacina",
               cadastrado: true,
-              message: "Fazenda cadastrada com sucesso!",
+              message: "Vacina cadastrada com sucesso!",
             });
           }
         }); 

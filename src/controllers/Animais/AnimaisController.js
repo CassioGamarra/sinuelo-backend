@@ -5,9 +5,9 @@ module.exports = {
 
   //GET
   async buscar(req, res) {
-    const isActive = req.isActive;
+    const isAdmin = req.isAdmin;
     
-    if (isActive) {
+    if (isAdmin) {
       const schema = req.schema;
 
       const sqlSelect = {
