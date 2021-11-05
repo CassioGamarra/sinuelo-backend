@@ -90,26 +90,49 @@ module.exports = {
       const schema = req.schema;
       const dados = req.body;
 
-      const sqlInsert = {
-        text: `INSERT INTO ${schema}.VACINAS (DESCRICAO, IND_OBRIGATORIO, MODO_USO, DETALHES) VALUES ($1, $2, $3, $4)`,
-        values: [dados.DESCRICAO, dados.IND_OBRIGATORIO, dados.MODO_USO, dados.DETALHES] 
+      const sqlSelect = {
+        text: `SELECT ID_VACINA FROM ${schema}.VACINAS WHERE DESCRICAO = $1`,
+        values: [dados.DESCRICAO] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlInsert, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
             done(); 
-            res.json({
-              statusCode: 200,
-              title: "Cadastrar Vacina",
-              cadastrado: true,
-              message: "Vacina cadastrada com sucesso!",
-            });
+            if(result.rows.length > 0) {
+              res.json({
+                statusCode: 400,
+                title: "Cadastrar Vacina",
+                error: true,
+                message: "Já existe um vacina com esta descrição!",
+              });
+            } else {   
+              const sqlInsert = {
+                text: `INSERT INTO ${schema}.VACINAS (DESCRICAO, IND_OBRIGATORIO, MODO_USO, DETALHES) VALUES ($1, $2, $3, $4)`,
+                values: [dados.DESCRICAO, dados.IND_OBRIGATORIO, dados.MODO_USO, dados.DETALHES] 
+              }
+
+              pool.connect((err, client, done) => {
+                if (err) throw err; 
+                client.query(sqlInsert, (err, result) => {
+                  if (err) throw err;
+                  else {    
+                    done(); 
+                    res.json({
+                      statusCode: 200,
+                      title: "Cadastrar Vacina",
+                      cadastrado: true,
+                      message: "Vacina cadastrada com sucesso!",
+                    });
+                  }
+                }); 
+              }); 
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,

@@ -95,28 +95,98 @@ module.exports = {
 
       const idAnimal = dados.ID_ANIMAL !== '' ? dados.ID_ANIMAL : null;
       const codRFID = dados.COD_RFID !== '' ? dados.COD_RFID : null; 
-      const codVisual = dados.COD_VISUAL !== '' ? dados.COD_VISUAL : null; 
+      const codVisual = dados.COD_VISUAL !== '' ? dados.COD_VISUAL : null;  
 
-      const sqlInsert = {
-        text: `INSERT INTO ${schema}.BRINCOS (ID_ANIMAL, COD_RFID, COD_VISUAL) VALUES ($1, $2, $3)`,
-        values: [idAnimal, codRFID, codVisual] 
+      const codigo = codRFID ? codRFID : codVisual
+      const sqlSelect = {
+        text: `SELECT ID_BRINCO FROM ${schema}.BRINCOS WHERE COD_RFID = $1 OR COD_VISUAL = $1`,
+        values: [codigo] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlInsert, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
             done(); 
-            res.json({
-              statusCode: 200,
-              title: "Cadastrar Brinco",
-              cadastrado: true,
-              message: "Brinco cadastrado com sucesso!",
-            });
+            if(result.rows.length > 0) {
+              res.json({
+                statusCode: 400,
+                title: "Cadastrar Brinco",
+                error: true,
+                message: "Já existe um brinco com este código!",
+              });
+            } else {   
+              if(idAnimal) {
+                const sqlSelect = {
+                  text: `SELECT COD_RFID, COD_VISUAL FROM ${schema}.BRINCOS WHERE ID_ANIMAL = $1`,
+                  values: [idAnimal] 
+                }
+                pool.connect((err, client, done) => {
+                  if (err) throw err; 
+                  client.query(sqlSelect, (err, result) => {
+                    if (err) throw err;
+                    else {    
+                      done(); 
+                      if(result.rows.length > 0) { 
+                        const codigoBrinco = result.rows[0].cod_rfid ? result.rows[0].cod_rfid : result.rows[0].cod_visual 
+                        res.json({
+                          statusCode: 400,
+                          title: "Cadastrar Brinco",
+                          error: true,
+                          message: `O animal selecionado já possui o brinco ${codigoBrinco}`,
+                        });
+                      } else {
+                        const sqlInsert = {
+                          text: `INSERT INTO ${schema}.BRINCOS (ID_ANIMAL, COD_RFID, COD_VISUAL) VALUES ($1, $2, $3)`,
+                          values: [idAnimal, codRFID, codVisual] 
+                        }
+                  
+                        pool.connect((err, client, done) => {
+                          if (err) throw err; 
+                          client.query(sqlInsert, (err, result) => {
+                            if (err) throw err;
+                            else {    
+                              done(); 
+                              res.json({
+                                statusCode: 200,
+                                title: "Cadastrar Brinco",
+                                cadastrado: true,
+                                message: "Brinco cadastrado com sucesso!",
+                              });
+                            }
+                          }); 
+                        }); 
+                      }
+                    }
+                  }); 
+                }); 
+              } else {
+                const sqlInsert = {
+                  text: `INSERT INTO ${schema}.BRINCOS (ID_ANIMAL, COD_RFID, COD_VISUAL) VALUES ($1, $2, $3)`,
+                  values: [idAnimal, codRFID, codVisual] 
+                }
+          
+                pool.connect((err, client, done) => {
+                  if (err) throw err; 
+                  client.query(sqlInsert, (err, result) => {
+                    if (err) throw err;
+                    else {    
+                      done(); 
+                      res.json({
+                        statusCode: 200,
+                        title: "Cadastrar Brinco",
+                        cadastrado: true,
+                        message: "Brinco cadastrado com sucesso!",
+                      });
+                    }
+                  }); 
+                }); 
+              }  
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,
@@ -170,28 +240,51 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema; 
-      const idFazenda = req.params.id;
+      const idBrinco = req.params.id;
 
-      const sqlUpdate = {
-        text: `DELETE FROM ${schema}.FAZENDA WHERE ID_FAZENDA = $1`,
-        values: [idFazenda] 
+      const sqlSelect = {
+        text: `SELECT 1 FROM ${schema}.BRINCOS WHERE ID_ANIMAL IS NOT NULL AND ID_BRINCO = $1 FETCH FIRST ROW ONLY`,
+        values: [idBrinco] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlUpdate, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
-            done(); 
-            res.json({
-              statusCode: 200,
-              title: "Excluir Fazenda",
-              deletado: true,
-              message: "Fazenda excluída com sucesso!",
-            });
+            done();
+            if(result.rows.length > 0 ) {
+              res.json({
+                statusCode: 400,
+                title: "Excluir Brinco",
+                error: true,
+                message: "Não foi possível excluir o brinco pois existe um animal vinculado!",
+              });
+            } else {
+              const sqlUpdate = {
+                text: `DELETE FROM ${schema}.BRINCOS WHERE ID_BRINCO = $1`,
+                values: [idBrinco] 
+              }
+        
+              pool.connect((err, client, done) => {
+                if (err) throw err; 
+                client.query(sqlUpdate, (err, result) => {
+                  if (err) throw err;
+                  else {    
+                    done(); 
+                    res.json({
+                      statusCode: 200,
+                      title: "Excluir Brinco",
+                      deletado: true,
+                      message: "Brinco excluído com sucesso!",
+                    });
+                  }
+                }); 
+              }); 
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,

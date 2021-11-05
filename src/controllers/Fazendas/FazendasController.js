@@ -208,26 +208,48 @@ module.exports = {
       const schema = req.schema; 
       const idFazenda = req.params.id;
 
-      const sqlUpdate = {
-        text: `DELETE FROM ${schema}.FAZENDAS WHERE ID_FAZENDA = $1`,
+      const sqlSelect = {
+        text: `SELECT 1 FROM ${schema}.ANIMAIS WHERE ID_FAZENDA = $1 FETCH FIRST ROW ONLY`,
         values: [idFazenda] 
-      }
+      } 
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlUpdate, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
-            done(); 
-            res.json({
-              statusCode: 200,
-              title: "Excluir Fazenda",
-              deletado: true,
-              message: "Fazenda excluída com sucesso!",
-            });
+            done();
+            if(result.rows.length > 0 ) {
+              res.json({
+                statusCode: 400,
+                title: "Excluir Fazenda",
+                error: true,
+                message: "Não foi possível excluir a fazenda pois existem animais cadastrados!",
+              });
+            } else {
+              const sqlUpdate = {
+                text: `DELETE FROM ${schema}.FAZENDAS WHERE ID_FAZENDA = $1`,
+                values: [idFazenda] 
+              } 
+              pool.connect((err, client, done) => {
+                if (err) throw err; 
+                client.query(sqlUpdate, (err, result) => {
+                  if (err) throw err;
+                  else {    
+                    done(); 
+                    res.json({
+                      statusCode: 200,
+                      title: "Excluir Fazenda",
+                      deletado: true,
+                      message: "Fazenda excluída com sucesso!",
+                    });
+                  }
+                }); 
+              }); 
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,

@@ -48,20 +48,16 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema;
-      const idFazenda = req.params.id; 
+      const idRaca = req.params.id; 
 
       const sqlSelect = {
         text: ` 
-          SELECT 
-            ID_FAZENDA AS ID,
-            NOME,
-            CEP,
-            CIDADE,
-            ESTADO
-          FROM ${schema}.FAZENDA
-          WHERE ID_FAZENDA = $1
+          SELECT  
+            NOME
+          FROM ${schema}.RACAS
+          WHERE ID_RACA = $1
         `,
-        values:[idFazenda]
+        values:[idRaca]
       }
 
       pool.connect((err, client, done) => {
@@ -89,28 +85,51 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema;
-      const dados = req.body;
+      const dados = req.body; 
 
-      const sqlInsert = {
-        text: `INSERT INTO ${schema}.RACAS (NOME) VALUES ($1)`,
+      const sqlSelect = {
+        text: `SELECT ID_RACA FROM ${schema}.RACAS WHERE NOME = $1`,
         values: [dados.NOME] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlInsert, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
             done(); 
-            res.json({
-              statusCode: 200,
-              title: "Cadastrar Raça",
-              cadastrado: true,
-              message: "Raça cadastrada com sucesso!",
-            });
+            if(result.rows.length > 0) {
+              res.json({
+                statusCode: 400,
+                title: "Adicionar Raça",
+                error: true,
+                message: "Já existe um raça com este nome!",
+              });
+            } else {  
+              const sqlInsert = {
+                text: `INSERT INTO ${schema}.RACAS (NOME) VALUES ($1)`,
+                values: [dados.NOME] 
+              }
+        
+              pool.connect((err, client, done) => {
+                if (err) throw err; 
+                client.query(sqlInsert, (err, result) => {
+                  if (err) throw err;
+                  else {    
+                    done(); 
+                    res.json({
+                      statusCode: 200,
+                      title: "Cadastrar Raça",
+                      cadastrado: true,
+                      message: "Raça cadastrada com sucesso!",
+                    });
+                  }
+                }); 
+              }); 
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,
@@ -127,28 +146,51 @@ module.exports = {
     if (isAdmin) {
       const schema = req.schema;
       const dados = req.body;
-      const idFazenda = req.params.id;
+      const idRaca = req.params.id; 
 
-      const sqlUpdate = {
-        text: `UPDATE ${schema}.FAZENDA SET NOME = $1, CEP = $2, CIDADE = $3, ESTADO = $4 WHERE ID_FAZENDA = $5`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO, idFazenda] 
+      const sqlSelect = {
+        text: `SELECT ID_RACA FROM ${schema}.RACAS WHERE NOME = $1`,
+        values: [dados.NOME] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlUpdate, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
             done(); 
-            res.json({
-              statusCode: 200,
-              title: "Editar Fazenda",
-              cadastrado: true,
-              message: "Fazenda atualizada com sucesso!",
-            });
+            if(result.rows.length > 0 && dados.NOME !== dados.NOME_ORIGINAL) {
+              res.json({
+                statusCode: 400,
+                title: "Editar Raça",
+                error: true,
+                message: "Já existe um raça com este nome!",
+              });
+            } else {  
+              const sqlUpdate = {
+                text: `UPDATE ${schema}.RACAS SET NOME = $1 WHERE ID_RACA = $2`,
+                values: [dados.NOME, idRaca]
+              }
+
+              pool.connect((err, client, done) => {
+                if (err) throw err;
+                client.query(sqlUpdate, (err, result) => {
+                  if (err) throw err;
+                  else {
+                    done();
+                    res.json({
+                      statusCode: 200,
+                      title: "Editar Raça",
+                      cadastrado: true,
+                      message: "Raça atualizada com sucesso!",
+                    });
+                  }
+                });
+              });
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,
@@ -164,28 +206,51 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema; 
-      const idFazenda = req.params.id;
+      const idRaca = req.params.id; 
 
-      const sqlUpdate = {
-        text: `DELETE FROM ${schema}.FAZENDA WHERE ID_FAZENDA = $1`,
-        values: [idFazenda] 
+      const sqlSelect = {
+        text: `SELECT 1 FROM ${schema}.ANIMAIS WHERE ID_RACA = $1 FETCH FIRST ROW ONLY`,
+        values: [idRaca] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlUpdate, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
-            done(); 
-            res.json({
-              statusCode: 200,
-              title: "Excluir Fazenda",
-              deletado: true,
-              message: "Fazenda excluída com sucesso!",
-            });
+            done();
+            if(result.rows.length > 0 ) {
+              res.json({
+                statusCode: 400,
+                title: "Excluir Raça",
+                error: true,
+                message: "Não foi possível excluir a raça pois existem animais cadastrados!",
+              });
+            } else {
+              const sqlUpdate = {
+                text: `DELETE FROM ${schema}.RACAS WHERE ID_RACA = $1`,
+                values: [idRaca] 
+              }
+        
+              pool.connect((err, client, done) => {
+                if (err) throw err; 
+                client.query(sqlUpdate, (err, result) => {
+                  if (err) throw err;
+                  else {    
+                    done(); 
+                    res.json({
+                      statusCode: 200,
+                      title: "Excluir Raça",
+                      deletado: true,
+                      message: "Raça excluída com sucesso!",
+                    });
+                  }
+                }); 
+              }); 
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,
