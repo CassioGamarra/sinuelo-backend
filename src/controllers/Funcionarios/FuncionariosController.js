@@ -182,7 +182,7 @@ module.exports = {
               
                 const sqlUpdate = {
                   text: `UPDATE ${schema}.FUNCIONARIOS SET NOME = $1, USUARIO = $2, SENHA = $3, EMAIL = $4, ATIVO = $5 WHERE ID_FUNCIONARIO = $6`,
-                  values: [dados.NOME, dados.USUARIO, dados.SENHA, dados.EMAIL, dados.ATIVO, idFuncionario] 
+                  values: [dados.NOME, dados.USUARIO, password, dados.EMAIL, dados.ATIVO, idFuncionario] 
                 }
           
                 pool.connect((err, client, done) => {
