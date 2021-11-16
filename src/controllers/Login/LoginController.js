@@ -116,7 +116,7 @@ module.exports = {
                     res.json({
                       statusCode: 403,
                       title: "Erro",
-                      message: "Senha incorreta!"
+                      message: "Usuário ou senha incorretos!"
                     });
                   }
                 }
