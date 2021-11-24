@@ -16,6 +16,8 @@ const DoencasController = require('./controllers/Doencas/DoencasController');
 const MedicamentosController = require('./controllers/Medicamentos/MedicamentosController');
 //Sincronização
 const SincronizarController = require('./controllers/Sincronizar/SincronizarController'); 
+//Relatorios
+const RelatoriosController = require('./controllers/Relatorios/RelatoriosController');
 
 //Rotas 
 routes.post('/admin/login', LoginController.administrador); //Login do administrador (no site)
@@ -85,5 +87,7 @@ routes.delete('/medicamentos/:id', verifyJWT, MedicamentosController.excluir);
 //Sincronizar
 routes.get('/sincronizar', verifyJWT, SincronizarController.buscar);
 routes.post('/sincronizar', verifyJWT, SincronizarController.cadastrar);
+//Relatorios
+routes.get('/relatorios/:id', verifyJWT, RelatoriosController.buscarPorId);
 
 module.exports = routes;

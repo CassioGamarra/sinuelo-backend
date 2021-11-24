@@ -50,20 +50,21 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema;
-      const idFazenda = req.params.id; 
+      const idBrinco = req.params.id; 
 
       const sqlSelect = {
         text: ` 
           SELECT 
-            ID_FAZENDA AS ID,
-            NOME,
-            CEP,
-            CIDADE,
-            ESTADO
-          FROM ${schema}.FAZENDA
-          WHERE ID_FAZENDA = $1
+            B.ID_BRINCO AS ID,
+            B.ID_ANIMAL,
+            B.COD_RFID,
+            B.COD_VISUAL,
+            A.NOME AS ANIMAL
+          FROM ${schema}.BRINCOS B
+            LEFT JOIN ${schema}.ANIMAIS A ON B.ID_ANIMAL = A.ID_ANIMAL
+          WHERE ID_BRINCO = $1
         `,
-        values:[idFazenda]
+        values:[idBrinco]
       }
 
       pool.connect((err, client, done) => {
@@ -203,11 +204,11 @@ module.exports = {
     if (isAdmin) {
       const schema = req.schema;
       const dados = req.body;
-      const idFazenda = req.params.id;
+      const idBrinco = req.params.id;
 
       const sqlUpdate = {
-        text: `UPDATE ${schema}.FAZENDA SET NOME = $1, CEP = $2, CIDADE = $3, ESTADO = $4 WHERE ID_FAZENDA = $5`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO, idFazenda] 
+        text: `UPDATE ${schema}.BRINCOS SET ID_ANIMAL = $1, COD_RFID = $2, COD_VISUAL = $3 WHERE ID_BRINCO = $4`,
+        values: [dados.ID_ANIMAL, dados.COD_RFID, dados.COD_VISUAL, idBrinco] 
       }
 
       pool.connect((err, client, done) => {
@@ -218,9 +219,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Editar Fazenda",
+              title: "Editar Brinco",
               cadastrado: true,
-              message: "Fazenda atualizada com sucesso!",
+              message: "Brinco atualizado com sucesso!",
             });
           }
         }); 

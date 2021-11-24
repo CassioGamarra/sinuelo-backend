@@ -47,20 +47,20 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema;
-      const idFazenda = req.params.id; 
+      const idVacina = req.params.id; 
 
       const sqlSelect = {
         text: ` 
           SELECT 
-            ID_FAZENDA AS ID,
-            NOME,
-            CEP,
-            CIDADE,
-            ESTADO
-          FROM ${schema}.FAZENDA
-          WHERE ID_FAZENDA = $1
+            ID_VACINA AS ID,
+            DESCRICAO,
+            IND_OBRIGATORIO,
+            MODO_USO,
+            DETALHES  
+          FROM ${schema}.VACINAS
+          WHERE ID_VACINA = $1
         `,
-        values:[idFazenda]
+        values:[idVacina]
       }
 
       pool.connect((err, client, done) => {
@@ -149,11 +149,11 @@ module.exports = {
     if (isAdmin) {
       const schema = req.schema;
       const dados = req.body;
-      const idFazenda = req.params.id;
+      const idVacina = req.params.id;
 
       const sqlUpdate = {
-        text: `UPDATE ${schema}.FAZENDA SET NOME = $1, CEP = $2, CIDADE = $3, ESTADO = $4 WHERE ID_FAZENDA = $5`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO, idFazenda] 
+        text: `UPDATE ${schema}.VACINAS SET DESCRICAO = $1, IND_OBRIGATORIO = $2, MODO_USO = $3, DETALHES = $4 WHERE ID_VACINA = $5`,
+        values: [dados.DESCRICAO, dados.IND_OBRIGATORIO, dados.MODO_USO, dados.DETALHES, idVacina] 
       }
 
       pool.connect((err, client, done) => {
@@ -164,9 +164,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Editar Fazenda",
+              title: "Editar Vacina",
               cadastrado: true,
-              message: "Fazenda atualizada com sucesso!",
+              message: "Vacina atualizada com sucesso!",
             });
           }
         }); 
@@ -186,28 +186,51 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema; 
-      const idFazenda = req.params.id;
+      const idVacina = req.params.id;
 
-      const sqlUpdate = {
-        text: `DELETE FROM ${schema}.FAZENDA WHERE ID_FAZENDA = $1`,
-        values: [idFazenda] 
+      const sqlSelect = {
+        text: `SELECT 1 FROM ${schema}.HISTORICO_VACINAS WHERE ID_VACINA = $1 FETCH FIRST ROW ONLY`,
+        values: [idVacina] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlUpdate, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
-            done(); 
-            res.json({
-              statusCode: 200,
-              title: "Excluir Fazenda",
-              deletado: true,
-              message: "Fazenda excluída com sucesso!",
-            });
+            done();
+            if(result.rows.length > 0 ) {
+              res.json({
+                statusCode: 400,
+                title: "Excluir Vacina",
+                error: true,
+                message: "Não foi possível excluir a vacina pois isso irá afetar o histórico.",
+              });
+            } else {
+              const sqlUpdate = {
+                text: `DELETE FROM ${schema}.VACINAS WHERE ID_VACINA = $1`,
+                values: [idVacina] 
+              }
+        
+              pool.connect((err, client, done) => {
+                if (err) throw err; 
+                client.query(sqlUpdate, (err, result) => {
+                  if (err) throw err;
+                  else {    
+                    done(); 
+                    res.json({
+                      statusCode: 200,
+                      title: "Excluir Vacina",
+                      deletado: true,
+                      message: "Vacina excluída com sucesso!",
+                    });
+                  }
+                }); 
+              }); 
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,
@@ -215,5 +238,5 @@ module.exports = {
           message: "Não autorizado!"
       });
     } 
-  }, 
+  },  
 }

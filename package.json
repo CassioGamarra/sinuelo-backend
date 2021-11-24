@@ -8,7 +8,7 @@
     "dev": "nodemon src/sinuelo.js"
   },
   "keywords": [],
-  "author": "AVMB Soluções em TI",
+  "author": "Cássio Gamarra",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",

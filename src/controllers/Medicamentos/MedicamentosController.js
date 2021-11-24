@@ -45,20 +45,18 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema;
-      const idFazenda = req.params.id; 
+      const idMedicamento = req.params.id; 
 
       const sqlSelect = {
         text: ` 
           SELECT 
-            ID_FAZENDA AS ID,
-            NOME,
-            CEP,
-            CIDADE,
-            ESTADO
-          FROM ${schema}.FAZENDA
-          WHERE ID_FAZENDA = $1
+            ID_MEDICAMENTO AS ID,
+            DESCRICAO,
+            MODO_USO
+          FROM ${schema}.MEDICAMENTOS
+          WHERE ID_MEDICAMENTO = $1
         `,
-        values:[idFazenda]
+        values:[idMedicamento]
       }
 
       pool.connect((err, client, done) => {
@@ -124,11 +122,11 @@ module.exports = {
     if (isAdmin) {
       const schema = req.schema;
       const dados = req.body;
-      const idFazenda = req.params.id;
+      const idMedicamento = req.params.id;
 
       const sqlUpdate = {
-        text: `UPDATE ${schema}.FAZENDA SET NOME = $1, CEP = $2, CIDADE = $3, ESTADO = $4 WHERE ID_FAZENDA = $5`,
-        values: [dados.NOME, dados.CEP, dados.CIDADE, dados.ESTADO, idFazenda] 
+        text: `UPDATE ${schema}.MEDICAMENTOS SET DESCRICAO = $1, MODO_USO = $2 WHERE ID_MEDICAMENTO = $3`,
+        values: [dados.DESCRICAO, dados.MODO_USO, idMedicamento] 
       }
 
       pool.connect((err, client, done) => {
@@ -139,9 +137,9 @@ module.exports = {
             done(); 
             res.json({
               statusCode: 200,
-              title: "Editar Fazenda",
+              title: "Editar Medicamento",
               cadastrado: true,
-              message: "Fazenda atualizada com sucesso!",
+              message: "Medicamento atualizado com sucesso!",
             });
           }
         }); 
@@ -161,28 +159,51 @@ module.exports = {
     
     if (isAdmin) {
       const schema = req.schema; 
-      const idFazenda = req.params.id;
+      const idMedicamento = req.params.id;
 
-      const sqlUpdate = {
-        text: `DELETE FROM ${schema}.FAZENDA WHERE ID_FAZENDA = $1`,
-        values: [idFazenda] 
+      const sqlSelect = {
+        text: `SELECT 1 FROM ${schema}.HISTORICO_MEDICAMENTOS WHERE ID_MEDICAMENTO = $1 FETCH FIRST ROW ONLY`,
+        values: [idMedicamento] 
       }
 
       pool.connect((err, client, done) => {
         if (err) throw err; 
-        client.query(sqlUpdate, (err, result) => {
+        client.query(sqlSelect, (err, result) => {
           if (err) throw err;
           else {    
-            done(); 
-            res.json({
-              statusCode: 200,
-              title: "Excluir Fazenda",
-              deletado: true,
-              message: "Fazenda excluída com sucesso!",
-            });
+            done();
+            if(result.rows.length > 0 ) {
+              res.json({
+                statusCode: 400,
+                title: "Excluir Medicamento",
+                error: true,
+                message: "Não foi possível excluir o medicamento pois isso irá afetar o histórico.",
+              });
+            } else {
+              const sqlUpdate = {
+                text: `DELETE FROM ${schema}.MEDICAMENTOS WHERE ID_MEDICAMENTO = $1`,
+                values: [idMedicamento] 
+              }
+        
+              pool.connect((err, client, done) => {
+                if (err) throw err; 
+                client.query(sqlUpdate, (err, result) => {
+                  if (err) throw err;
+                  else {    
+                    done(); 
+                    res.json({
+                      statusCode: 200,
+                      title: "Excluir Medicamento",
+                      deletado: true,
+                      message: "Medicamento excluído com sucesso!",
+                    });
+                  }
+                }); 
+              }); 
+            } 
           }
         }); 
-      }); 
+      });  
     } else {
       res.json({
           statusCode: 401,
