@@ -10,8 +10,8 @@ const pool = new Pool({
   database: process.env.DATABASE,
   password: process.env.PASSWORD,
   port: process.env.PORT,
-  //ssl: true,
-  //ssl: { rejectUnauthorized: false }
+  ssl: true,
+  ssl: { rejectUnauthorized: false }
 });
 
 //Verifica se é possível conectar com o PostgreSQL

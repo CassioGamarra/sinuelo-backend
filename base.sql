@@ -3,11 +3,9 @@ FROM pg_catalog.pg_tables
 WHERE schemaname != 'pg_catalog' AND
     schemaname = 'fazenda_esperanca';
 
-CREATE SCHEMA SINUELO;
+ALTER DATABASE NOME_BASE SET DATESTYLE  TO 'ISO, DMY';
 
-drop schema SINUELO cascade;
-
-drop table public.doencas;
+CREATE SCHEMA SINUELO; 
 
 CREATE TABLE sinuelo.clientes (
 	id_cliente serial NOT NULL,
@@ -17,9 +15,7 @@ CREATE TABLE sinuelo.clientes (
 	ativo bool NOT NULL,
 	PRIMARY KEY (id_cliente)
 );
-
-
-
+ 
 CREATE TABLE sinuelo.usuarios (
 		id_usuario serial NOT NULL,
 		id_cliente integer not null,
@@ -30,20 +26,11 @@ CREATE TABLE sinuelo.usuarios (
 		ativo bool NULL,
 		foreign key(id_cliente) references sinuelo.clientes(id_cliente) on update cascade on delete restrict,
 		PRIMARY KEY (id_usuario)
-	);
-
-	drop table sinuelo.usuarios;
-select * from sinuelo.clientes;
-
-SELECT U.ID_USUARIO, U.ID_CLIENTE, U.SENHA, C.NOME_SCHEMA
-FROM SINUELO.USUARIOS U
-	JOIN SINUELO.CLIENTES C ON U.ID_CLIENTE = C.ID_CLIENTE
+	); 
 
 INSERT INTO sinuelo.clientes (nome, caminho, nome_schema, ativo) values ('Fazenda Esperança', 'MV9mYXplbmRhX2VzcGVyYW5jYQ==', 'fazenda_esperanca', true);
-insert into sinuelo.usuarios(id_cliente, nome, usuario, senha, email,  ativo) values (1,'Cássio Gamarra', 'cassio.gamarra', '$2a$10$9ftk4n0HapIKGIIkvY7BxeqBiiPSgZl7g7w/FnkCdS2LGmS8n1OT6', 'cassiogamarra@outlook.com', true);
-
-drop schema fazenda_esperanca;
- 
+insert into sinuelo.usuarios(id_cliente, nome, usuario, senha, email,  ativo) values (1,'Administrador', 'administrador', '$2a$10$9ftk4n0HapIKGIIkvY7BxeqBiiPSgZl7g7w/FnkCdS2LGmS8n1OT6', 'cassiogamarra@outlook.com', true);
+  
 CREATE SCHEMA FAZENDA_ESPERANCA
 
 	CREATE TABLE doencas (
@@ -207,8 +194,8 @@ CREATE SCHEMA FAZENDA_ESPERANCA
 		FOREIGN KEY (id_funcionario) REFERENCES funcionarios(id_funcionario) ON DELETE RESTRICT ON UPDATE CASCADE
 	);
 
-
-
-
-
-
+select * from fazenda_esperanca.funcionarios;
+select * from fazenda_esperanca.historico_pesagens;
+select * from fazenda_esperanca.historico_medicamentos;
+select * from fazenda_esperanca.historico_vacinas;
+select * from fazenda_esperanca.historico_doencas;

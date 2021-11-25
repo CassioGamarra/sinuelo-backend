@@ -28,5 +28,10 @@ Após a instalação, para iniciar o projeto no modo de desenvolvimento, rode o 
 ```bash
 npm run dev
 ```
+
+## Banco de dados
+O banco de dados utilizado no projeto é o PostgreSQL, é possível criar a base utilizando o arquivo **base.sql**,
+porém recomendo a utilização da base que econtra-se hospedada no heroku e configurada no arquivo .env
+
 ## Dúvidas
 Em caso de dúvidas, envie um e-mail para [cassio.gamarra@ufn.edu.br](mailto:cassio.gamarra@ufn.edu.br) 
